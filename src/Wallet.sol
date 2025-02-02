@@ -7,7 +7,6 @@ pragma solidity ^0.8.26;
 error Wallet_NotOwner();
 
 contract Wallet {
-
     address payable public owner;
 
     constructor() {
@@ -19,15 +18,17 @@ contract Wallet {
         _;
     }
 
-    function getBalance() public view onlyOwner() returns (uint) {
+    function getBalance() public view onlyOwner returns (uint) {
         return address(this).balance;
     }
 
-    function sendValue(uint _amount, address payable _receiver) external onlyOwner() {
+    function sendValue(
+        uint _amount,
+        address _receiver
+    ) external payable onlyOwner {
         require(address(this).balance > _amount, "not enough money in wallet");
         payable(_receiver).transfer(_amount);
     }
 
     receive() external payable {}
-
 }
