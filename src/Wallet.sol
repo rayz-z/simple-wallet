@@ -5,6 +5,7 @@ pragma solidity ^0.8.26;
 // send amount to
 
 error Wallet_NotOwner();
+error Wallet_NotEnoughFunds();
 
 contract Wallet {
     address payable public owner;
@@ -14,7 +15,9 @@ contract Wallet {
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "caller is not owner");
+        if (msg.sender != owner) {
+            revert Wallet_NotOwner();
+        }
         _;
     }
 
@@ -26,8 +29,12 @@ contract Wallet {
         uint _amount,
         address _receiver
     ) external payable onlyOwner {
-        require(address(this).balance > _amount, "not enough money in wallet");
-        payable(_receiver).transfer(_amount);
+        if (address(this).balance < _amount) {
+            revert Wallet_NotEnoughFunds();
+        }
+
+        (bool success, ) = payable(_receiver).call{value: _amount}("");
+        require(success, "Transfer failed");
     }
 
     receive() external payable {}
