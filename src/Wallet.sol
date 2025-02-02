@@ -1,24 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-// get balance
-// send amount to
-
 error Wallet_NotOwner();
 error Wallet_NotEnoughFunds();
 error Wallet_AddressNotFound();
 
 contract Wallet {
-    address payable public owner;
-    mapping(address => uint) private ethSent;
-    mapping(address => uint) private ethReceived;
+    address payable public immutable i_owner;
+    mapping(address => uint) private s_ethSent;
+    mapping(address => uint) private s_ethReceived;
 
     constructor() {
-        owner = payable(msg.sender);
+        i_owner = payable(msg.sender);
     }
 
     modifier onlyOwner() {
-        if (msg.sender != owner) {
+        if (msg.sender != i_owner) {
             revert Wallet_NotOwner();
         }
         _;
@@ -29,11 +26,11 @@ contract Wallet {
     }
 
     function getSent(address _receiver) public view onlyOwner returns (uint) {
-        return ethSent[_receiver];
+        return s_ethSent[_receiver];
     }
 
     function getReceived(address _sender) public view onlyOwner returns (uint) {
-        return ethSent[_sender];
+        return s_ethSent[_sender];
     }
 
     function sendValue(
@@ -47,10 +44,10 @@ contract Wallet {
         (bool success, ) = payable(_receiver).call{value: _amount}("");
         require(success, "Transfer failed");
 
-        ethSent[_receiver] += _amount;
+        s_ethSent[_receiver] += _amount;
     }
 
     receive() external payable {
-        ethReceived[msg.sender] += msg.value;
+        s_ethReceived[msg.sender] += msg.value;
     }
 }
