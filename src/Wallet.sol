@@ -6,9 +6,12 @@ pragma solidity ^0.8.26;
 
 error Wallet_NotOwner();
 error Wallet_NotEnoughFunds();
+error Wallet_AddressNotFound();
 
 contract Wallet {
     address payable public owner;
+    mapping(address => uint) private ethSent;
+    mapping(address => uint) private ethReceived;
 
     constructor() {
         owner = payable(msg.sender);
@@ -25,6 +28,14 @@ contract Wallet {
         return address(this).balance;
     }
 
+    function getSent(address _receiver) public view onlyOwner returns (uint) {
+        return ethSent[_receiver];
+    }
+
+    function getReceived(address _sender) public view onlyOwner returns (uint) {
+        return ethSent[_sender];
+    }
+
     function sendValue(
         uint _amount,
         address _receiver
@@ -35,7 +46,11 @@ contract Wallet {
 
         (bool success, ) = payable(_receiver).call{value: _amount}("");
         require(success, "Transfer failed");
+
+        ethSent[_receiver] += _amount;
     }
 
-    receive() external payable {}
+    receive() external payable {
+        ethReceived[msg.sender] += msg.value;
+    }
 }
